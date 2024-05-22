@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 byteorder = "1.4"
 flate2 = "1.0.30"
+crc = "3.2.1"

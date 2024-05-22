@@ -57,4 +57,13 @@ mod tests {
         let ppm_writer = ppm_writer::PPMWriter {};
         ppm_writer.write(image, "output/image.ppm");
     }
+    
+    #[test]
+    fn ppm_read_png_write() {
+        let ppm_reader = ppm_reader::PPMReader {};
+        let image = ppm_reader.read("resources/6pixels.ppm").unwrap();
+
+        let writer = png_writer::PNGWriter {};
+        writer.write(image, "output/image.png");
+    }
 }

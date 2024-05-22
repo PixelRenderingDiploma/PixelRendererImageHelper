@@ -82,7 +82,7 @@ impl Reader for PNGReader {
         let png = PNG::from_file(path);
         
         let ihdr_chunk = png.chunks.iter().find(|chunk| chunk.chunk_type == ChunkType::IHDR).unwrap();
-        let mut cursor = Cursor::new(ihdr_chunk.data.as_ref().unwrap());
+        let mut cursor = Cursor::new(&ihdr_chunk.data);
         let ihdr = IHDR::read(&mut cursor).unwrap();
         println!("{:?}", ihdr);
 
@@ -90,7 +90,7 @@ impl Reader for PNGReader {
         for chunk in png.chunks {
             match chunk.chunk_type {
                 ChunkType::IDAT => {
-                    concatenated.extend(&chunk.data.unwrap());
+                    concatenated.extend(&chunk.data);
                 }
                 _ => {}
             }

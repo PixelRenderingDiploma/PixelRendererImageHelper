@@ -3,12 +3,14 @@ pub mod idat;
 pub mod plte;
 
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter, Write};
 
 use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
 
 use crate::binary_serializable::*;
 use crate::read_to_string_exact::ReadToStringExact;
+
+const MAGIC: [u8; 8] = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
 pub struct PNG {
     pub chunks: Vec<Chunk>,
@@ -48,12 +50,23 @@ impl PNG {
         
         png
     }
+
+    pub fn to_file(&self, path: &str) {
+        let file = File::create(path).expect("Unable to read png file");
+        let mut writer = BufWriter::new(file);
+
+        let _ = writer.write(&MAGIC);
+
+        for chunk in self.chunks.iter() {
+            chunk.write(&mut writer).expect("Can't write chunk");
+        }
+    }
 }
 
 pub struct Chunk {
     pub length: u32,
     pub chunk_type: ChunkType,
-    pub data: Option<Vec<u8>>,
+    pub data: Vec<u8>,
     pub crc: u32,
 }
 
@@ -86,7 +99,7 @@ impl BinarySerializable for Chunk {
         Ok(Chunk {
             length,
             chunk_type,
-            data: Some(data),
+            data: data,
             crc,
         })
     }
@@ -101,7 +114,7 @@ impl BinarySerializable for Chunk {
             ChunkType::Other(ref s) => writer.write_all(s.as_bytes())?
         }
 
-        writer.write_all(&self.data.as_ref().unwrap())?;
+        writer.write_all(&self.data)?;
         writer.write_u32::<BigEndian>(self.crc)?;
         
         Ok(())
