@@ -63,6 +63,16 @@ impl PNG {
     }
 }
 
+pub fn paeth_predictor(a: u8, b: u8, c: u8) -> u8 {
+    let p = (a as i16 + b as i16 - c as i16) as i16;
+    let pa = (p - a as i16).abs();
+    let pb = (p - b as i16).abs();
+    let pc = (p - c as i16).abs();
+    if pa <= pb && pa <= pc { a }
+    else if pb <= pc { b }
+    else { c }
+}
+
 pub struct Chunk {
     pub length: u32,
     pub chunk_type: ChunkType,

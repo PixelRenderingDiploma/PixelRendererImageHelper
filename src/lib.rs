@@ -63,7 +63,13 @@ mod tests {
         let ppm_reader = ppm_reader::PPMReader {};
         let image = ppm_reader.read("resources/6pixels.ppm").unwrap();
 
-        let writer = png_writer::PNGWriter {};
+        let writer = png_writer::PNGWriter {
+            settings: png_writer::Settings {
+                bit_depth: 8,
+                color_type: png::ihdr::ColorType::RGB,
+                interlace_method: 0,
+            }
+        };
         writer.write(image, "output/image.png");
     }
 }

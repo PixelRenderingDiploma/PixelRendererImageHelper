@@ -4,7 +4,7 @@ use flate2::read::ZlibDecoder;
 
 use crate::binary_serializable::BinarySerializable;
 use crate::common::*;
-use crate::png::{PNG, ChunkType};
+use crate::png::{PNG, ChunkType, paeth_predictor};
 use crate::png::ihdr::IHDR;
 
 pub struct PNGReader {
@@ -22,20 +22,6 @@ const ADAM7: [(usize, usize, usize, usize); 7] = [
 ];
 
 impl PNGReader {
-    fn paeth_predictor(&self, a: u8, b: u8, c: u8) -> u8 {
-        let p = (a as i16 + b as i16 - c as i16) as i16;
-        let pa = (p - a as i16).abs();
-        let pb = (p - b as i16).abs();
-        let pc = (p - c as i16).abs();
-        if pa <= pb && pa <= pc {
-            a
-        } else if pb <= pc {
-            b
-        } else {
-            c
-        }
-    }
-
     fn unfilter_scanline(&self, filter_type: u8, scanline: &[u8], prev_scanline: Option<&[u8]>, bpp: usize) -> Vec<u8> {
         let mut unfiltered = Vec::with_capacity(scanline.len());
     
@@ -66,7 +52,7 @@ impl PNGReader {
                     let left = if i < bpp { 0 } else { unfiltered[i - bpp] };
                     let above = prev_scanline.map_or(0, |prev| prev[i]);
                     let above_left = if i < bpp { 0 } else { prev_scanline.map_or(0, |prev| prev[i - bpp]) };
-                    unfiltered.push(scanline[i].wrapping_add(self.paeth_predictor(left, above, above_left)));
+                    unfiltered.push(scanline[i].wrapping_add(paeth_predictor(left, above, above_left)));
                 }
             }
             _ => panic!("Unknown filter type"),
